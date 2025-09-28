@@ -1,0 +1,251 @@
+import re
+
+# Part 1.1
+def format_receipt(items, prices, quantities):
+    lines = []
+    lines.append(f"{'Item':<20}{'Qty':^5}{'Price':>8}")
+    lines.append("-" * 33)
+    total = 0
+    for item, price, qty in zip(items, prices, quantities):
+        line_total = price * qty
+        total += line_total
+        lines.append(f"{item:<20}{str(qty):^5}${line_total:>7.2f}")
+    lines.append("-" * 33)
+    lines.append(f"{'TOTAL':<25}${total:>7.2f}")
+    return "\n".join(lines)
+
+# Part 1.2
+def process_user_data(raw_data):
+    name = raw_data.get('name', '').strip().title()
+    email = re.sub(r'\s+', '', raw_data.get('email', '')).lower()
+    phone = re.sub(r'\D', '', raw_data.get('phone', ''))
+    address = re.sub(r'\s+', ' ', raw_data.get('address', '').strip()).title()
+    username = '_'.join(name.lower().split())
+    validation = {
+        'email_valid': bool(re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email)),
+        'phone_valid': bool(re.match(r'^\d{10}$', phone))
+    }
+    return {
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'address': address,
+        'username': username,
+        'validation': validation
+    }
+
+# Part 1.3
+def analyze_text(text):
+    lines = text.splitlines()
+    words = re.findall(r'\b\w+\b', text)
+    sentences = re.findall(r'[^.!?]*[.!?]', text)
+    word_freq = {}
+    for word in words:
+        lw = word.lower()
+        word_freq[lw] = word_freq.get(lw, 0) + 1
+    most_common = max(word_freq, key=word_freq.get) if word_freq else ''
+    return {
+        'total_chars': len(text),
+        'total_words': len(words),
+        'total_lines': len(lines),
+        'avg_word_length': round(sum(len(w) for w in words) / len(words), 2) if words else 0,
+        'most_common_word': most_common,
+        'longest_line': max(lines, key=len) if lines else '',
+        'words_per_line': [len(re.findall(r'\b\w+\b', line)) for line in lines],
+        'capitalized_sentences': len([s for s in sentences if re.match(r'^\s*[A-Z]', s)]),
+        'questions': len([s for s in sentences if s.strip().endswith('?')]),
+        'exclamations': len([s for s in sentences if s.strip().endswith('!')])
+    }
+
+# Part 2.1
+def find_patterns(text):
+    return {
+        'integers': re.findall(r'\b\d+\b', text),
+        'decimals': re.findall(r'\b\d+\.\d+\b', text),
+        'words_with_digits': re.findall(r'\b\w*\d\w*\b', text),
+        'capitalized_words': re.findall(r'\b[A-Z][a-z]*\b', text),
+        'all_caps_words': re.findall(r'\b[A-Z]{2,}\b', text),
+        'repeated_chars': re.findall(r'\b\w*(\w)\1\w*\b', text)
+    }
+
+# Part 2.2
+def validate_format(input_string, format_type):
+    patterns = {
+        'phone': r'^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$',
+        'date': r'^(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])/(\d{4})$',
+        'time': r'^(\d{1,2}):(\d{2})(?:\s?(AM|PM))?$',
+        'email': r'^([\w\.-]+)@([\w\.-]+)\.(\w+)$',
+        'url': r'^(https?://)([\w\.-]+\.\w+)',
+        'ssn': r'^(\d{3})-(\d{2})-(\d{4})$'
+    }
+    match = re.match(patterns.get(format_type, ''), input_string)
+    if not match:
+        return (False, None)
+    groups = match.groups()
+    keys = {
+        'phone': ['area_code', 'prefix', 'line'],
+        'date': ['month', 'day', 'year'],
+        'time': ['hour', 'minute', 'period'],
+        'email': ['username', 'domain', 'extension'],
+        'url': ['protocol', 'domain'],
+        'ssn': ['part1', 'part2', 'part3']
+    }
+    return (True, dict(zip(keys.get(format_type, []), groups)))
+
+# Part 2.3
+def extract_information(text):
+    return {
+        'prices': re.findall(r'\$\d+(?:\.\d{2})?', text),
+        'percentages': re.findall(r'\d+(?:\.\d+)?%', text),
+        'years': re.findall(r'\b(19|20)\d{2}\b', text),
+        'sentences': re.findall(r'[^.!?]*[.!?]', text),
+        'questions': [s for s in re.findall(r'[^.!?]*[.!?]', text) if s.strip().endswith('?')],
+        'quoted_text': re.findall(r'"(.*?)"', text)
+    }
+
+# Part 3.1
+def clean_text_pipeline(text, operations):
+    steps = [text]
+    for op in operations:
+        if op == 'trim':
+            text = text.strip()
+        elif op == 'lowercase':
+            text = text.lower()
+        elif op == 'remove_punctuation':
+            text = re.sub(r'[^\w\s]', '', text)
+        elif op == 'remove_digits':
+            text = re.sub(r'\d', '', text)
+        elif op == 'remove_extra_spaces':
+            text = re.sub(r'\s+', ' ', text)
+        elif op == 'remove_urls':
+            text = re.sub(r'https?://\S+', '', text)
+        elif op == 'remove_emails':
+            text = re.sub(r'\b[\w\.-]+@[\w\.-]+\.\w+\b', '', text)
+        elif op == 'capitalize_sentences':
+            text = re.sub(r'(^|[.!?]\s+)([a-z])', lambda m: m.group(1) + m.group(2).upper(), text)
+        steps.append(text)
+    return {'original': steps[0], 'cleaned': text, 'steps': steps[1:]}
+
+# Part 3.2
+def smart_replace(text, replacements):
+    contractions = {
+        "don't": "do not", "won't": "will not", "can't": "cannot", "I'm": "I am",
+        "you're": "you are", "it's": "it is", "he's": "he is", "she's": "she is",
+        "we're": "we are", "they're": "they are", "I've": "I have", "you've": "you have",
+        "we've": "we have", "they've": "they have"
+    }
+    if replacements.get('censor_phone'):
+        text = re.sub(r'\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}', 'xxx-xxx-XXXX', text)
+    if replacements.get('censor_email'):
+        text = re.sub(r'\b[\w\.-]+@[\w\.-]+\.\w+\b', '[EMAIL]', text)
+    if replacements.get('fix_spacing'):
+        text = re.sub(r'\s*([.,!?;:])\s*', r'\1 ', text)
+    if replacements.get('expand_contractions'):
+        for c, e in contractions.items():
+            text = re.sub(r'\b' + re.escape(c) + r'\b', e, text)
+    if replacements.get('number_to_word'):
+        num_map = {'0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four', '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine'}
+        text = re.sub(r'\b\d\b', lambda m: num_map[m.group()], text)
+    return text
+
+def analyze_log_file(log_text):
+    # Match log entries: [YYYY-MM-DD HH:MM:SS] LEVEL: Message
+    pattern = r'\[(\d{4}-\d{2}-\d{2}) (\d{2}):\d{2}:\d{2}\] (\w+): (.+)'
+    matches = re.findall(pattern, log_text)
+
+    total_entries = len(matches)
+    error_count = sum(1 for m in matches if m[2] == 'ERROR')
+    warning_count = sum(1 for m in matches if m[2] == 'WARNING')
+    info_count = sum(1 for m in matches if m[2] == 'INFO')
+
+    dates = sorted(set(m[0] for m in matches))
+    error_messages = [m[3] for m in matches if m[2] == 'ERROR']
+
+    # Extract all hours for most active hour calculation
+    hours = [int(m[1]) for m in matches]
+    hour_freq = {}
+    for h in hours:
+        hour_freq[h] = hour_freq.get(h, 0) + 1
+    most_active_hour = max(hour_freq, key=hour_freq.get) if hour_freq else None
+
+    # Extract all times for time range
+    times = [m[1] for m in matches]
+    earliest_time = min(times) if times else None
+    latest_time = max(times) if times else None
+
+    return {
+        'total_entries': total_entries,
+        'error_count': error_count,
+        'warning_count': warning_count,
+        'info_count': info_count,
+        'dates': dates,
+        'error_messages': error_messages,
+        'time_range': (earliest_time, latest_time),
+        'most_active_hour': most_active_hour
+    }
+
+def run_tests(): 
+    #Test all functions with sample data.
+    print("="*50) 
+    print("Testing Part 1: String Methods") 
+    print("="*50) 
+    # Test 1.1: Receipt formatting 
+    items = ["Coffee", "Sandwich"] 
+    prices = [3.50, 8.99] 
+    quantities = [2, 1] 
+    receipt = format_receipt(items, prices, quantities) 
+    print("Receipt Test:") 
+    print(receipt) 
+    # Test 1.2: User data processing 
+    test_data = { 
+        'name': '  john DOE  ', 
+        'email': ' JOHN@EXAMPLE.COM ', 
+        'phone': '(555) 123-4567', 
+        'address': '123  main  street' 
+    } 
+    cleaned = process_user_data(test_data) 
+    print(f"\nCleaned name: {cleaned.get('name', 'ERROR')}") 
+    print(f"Cleaned email: {cleaned.get('email', 'ERROR')}") 
+    print("\n" + "="*50) 
+    print("Testing Part 2: Regular Expressions") 
+    print("="*50) 
+    # Test 2.1: Pattern finding 
+    test_text = "I have 25 apples and 3.14 pies" 
+    patterns = find_patterns(test_text) 
+    print(f"Found integers: {patterns.get('integers', [])}") 
+    print(f"Found decimals: {patterns.get('decimals', [])}") 
+    # Test 2.2: Format validation 
+    phone_valid, phone_parts = validate_format("(555) 123-4567", "phone") 
+    print(f"\nPhone validation: {phone_valid}") 
+    if phone_parts: 
+        print(f"Extracted parts: {phone_parts}")    
+    # Test 2.3: Information extraction 
+    info_text = 'The price is $19.99 (20% off).' 
+    info = extract_information(info_text) 
+    print(f"\nPrices found: {info.get('prices', [])}") 
+    print(f"Percentages found: {info.get('percentages', [])}") 
+    print("\n" + "="*50) 
+    print("Testing Part 3: Combined Operations") 
+    print("="*50) 
+    # Test 3.1: Cleaning pipeline 
+    dirty_text = "  Hello   WORLD!  " 
+    operations = ['trim', 'lowercase', 'remove_extra_spaces'] 
+    cleaned_result = clean_text_pipeline(dirty_text, operations) 
+    print(f"Original: '{cleaned_result.get('original', '')}'") 
+    print(f"Cleaned: '{cleaned_result.get('cleaned', '')}'") 
+    print("\n" + "="*50) 
+    print("Testing Part 4: Log Analysis") 
+    print("="*50) 
+    # Test 4.1: Log analysis 
+    sample_log = """[2024-01-15 10:30:45] ERROR: Connection failed 
+[2024-01-15 10:31:00] INFO: Retry attempt 
+[2024-01-15 10:32:00] WARNING: Timeout warning""" 
+    log_analysis = analyze_log_file(sample_log) 
+    print(f"Total entries: {log_analysis.get('total_entries', 0)}") 
+    print(f"Error count: {log_analysis.get('error_count', 0)}") 
+    print(f"Unique dates: {log_analysis.get('dates', [])}") 
+    print("\n" + "="*50) 
+    print("All tests completed!") 
+    print("="*50) 
+
+run_tests()
