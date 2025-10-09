@@ -1,0 +1,63 @@
+#Problem 4 String Processing
+def clean_name(name):
+    return name.strip().title()
+
+def validate_email(email):
+    if email.count("@") != 1:
+        return False
+    email.split("@")
+    if "." in email[2:]:
+        return True
+    
+def format_phone(phone):
+    '''
+    - Remove all non-digit characters
+    - If exactly 10 digits, format as: (XXX) XXX-XXXX
+    - Otherwise return "Invalid"
+    '''
+    phone_num = ''.join(filter(str.isdigit, phone))
+    if len(phone_num) == 10:
+        return f"({phone_num[:3]}) {phone_num[3:6]}-{phone_num[6:]}"
+    else:
+        return "Invalid"
+
+def process_registration(data_string):
+
+    '''
+    - data_string format: "name,email,phone"
+    - Split the string and clean each part
+    - Return dictionary with cleaned data or None if invalid
+    '''
+    data = data_string.split(",")
+    
+    if len(data) != 3:
+        return None
+
+    name = clean_name(data[0])
+    email = data[1].strip()
+    phone = data[2].strip()
+    
+    if not validate_email(email):
+        return None
+
+    formatted_phone = format_phone(phone)
+    if formatted_phone == "Invalid":
+        return None
+    
+    return {
+        "name": name, 
+        "email": email, 
+        "phone": formatted_phone
+        }
+
+# Test your functions
+if __name__ == "__main__":
+    #Test individual functions
+    print(clean_name(" john smith ")) # Should print "John Smith"
+    print(validate_email("test@email.com")) # Should print True
+    print(validate_email("bad.email")) # Should print False
+    print(format_phone("555-123-4567")) # Should print "(555) 123-4567"
+    print(format_phone("123")) # Should print "Invalid"
+    #Test complete processing
+    test_data = " alice jones ,alice@example.com,9871234567"
+    print(process_registration(test_data))
