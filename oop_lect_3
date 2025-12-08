@@ -1,0 +1,87 @@
+'''
+# TODO: Create Vehicle base class and Car derived class
+class Vehicle:
+    def __init__(self, brand, model):
+        self.brand = brand
+        self.model = model
+    def start(self):
+        print(f"{self.brand} {self.model} is starting")
+# TODO: Create Car class that inherits from Vehicle
+class Car(Vehicle):
+    def honk(self):
+        print(f'{self.brand} {self.model} went beep beep')
+
+# Test:
+my_car = Car("Toyota", "Camry").start()
+'''
+# TODO: Student hierarchy
+class Student:
+    def __init__(self, name, student_id):
+        self.name = name
+        self.student_id = student_id
+        self.courses = []
+        self.gpa = 0.0
+    def enroll(self, course):
+        self.courses.append(course)
+        print(f"Enrolled in {course}")
+
+class GraduateStudent(Student):
+    def __init__(self, name, student_id, thesis_topic):
+        super.__init__(name, student_id)
+        self.thesis_topic = thesis_topic
+        self.advisor_name = None
+        
+    def set_advisor(self, advisor_name):
+        self.advisor_name = advisor_name
+        
+    def enroll(self, course):
+        # Grad students can only take 500+ level courses
+        # Check if course number >= 500
+        if course >= 500:
+            self.course = course
+        else:
+            print("Student is not currently eligible for this course")
+
+
+# TODO: Vehicle for land and water
+class LandVehicle:
+    def __init__(self):
+        self.speed_on_land = 60
+    def drive(self):
+        print(f"Driving at {self.speed_on_land} mph")
+class WaterVehicle:
+    def __init__(self):
+        self.speed_on_water = 30
+    def sail(self):
+        print(f"Sailing at {self.speed_on_water} knots")
+
+class AmphibiousVehicle(LandVehicle, WaterVehicle):
+    def __init__(self, name):
+        # Initialize both
+        # Track current mode
+        pass
+    def switch_mode(self):
+        # Toggle between land and water
+        pass
+    
+# TODO: Handle method conflicts
+class Camera:
+    def __init__(self):
+        self.megapixels = 12
+    def capture(self):
+        return "Photo taken!"
+
+class Phone:
+    def __init__(self):
+        self.phone_number = "555-1234"
+    def capture(self): # Same method name!
+        return "Screenshot taken!"
+
+class SmartPhone(Phone, Camera):
+    def __init__(self, model):
+        # Initialize both
+        pass
+    def capture(self, mode="phone"):
+        # Let user choose which capture to use
+        pass
+# How to handle conflicting methods

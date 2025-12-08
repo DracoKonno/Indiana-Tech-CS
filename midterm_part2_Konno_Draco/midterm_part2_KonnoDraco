@@ -1,4 +1,4 @@
-# Write your code here:
+#Problem 2: Set Operations For Course Registration
 def find_common_students(course1_students, course2_students):
     return course1_students & course2_students
 
@@ -11,7 +11,7 @@ def find_unique_to_course1(course1_students, course2_students):
 def check_enrollment(student_name, *course_lists):
     return any(student_name in course for course in course_lists) 
 
-# Test your functions
+#Test your functions
 if __name__ == "__main__":
     cs_students = {"Alice", "Bob", "Charlie", "David"}
     math_students = {"Bob", "Charlie", "Eve", "Frank"}
